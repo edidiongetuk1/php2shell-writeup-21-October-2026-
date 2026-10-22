@@ -1,0 +1,35 @@
+OPTION 1 (single tweet):
+
+Just finished the PHP2Shell room on @RealTryHackMe 🐚
+
+Unauthenticated RCE against a PHP app that does nothing but print "OK" — the bug isn't in the app, it's in the PHP runtime itself (CVE-2026-109618 + CVE-2026-109619).
+
+Leaked memory → defeated ASLR → forged a destructor → got a shell as www-data.
+
+Full writeup + beginner walkthrough on my GitHub 🧵👇
+[link to your repo]
+
+#CyberSecurity #TryHackMe #BlueTeam #PHP #InfoSec
+
+
+---
+
+OPTION 2 (thread version):
+
+1/ Spent today on the PHP2Shell room (@RealTryHackMe). This one's wild — a critical RCE chain that lives entirely inside the PHP *runtime*, not in any application code. No login, no file upload your app accepts, no app-level bug needed.
+
+2/ The target "app" I attacked was a single line: <?php echo "OK\n"; ?>. That's it. And it was still fully exploitable, because the vulnerable code is below the application — in how PHP itself recovers from running out of memory mid-request.
+
+3/ The root cause: PHP's upload-progress tracking writes session data mid-request. If PHP runs out of memory at exactly the wrong moment, it aborts (a "bailout") but skips clearing a pointer — leaving a dangling pointer (CWE-824) behind in the worker process.
+
+4/ CVE-2026-109618 turns that dangling pointer into a memory leak — reading up to ~67KB of the server's own memory back through the Set-Cookie header. That's enough to defeat ASLR by leaking the exact addresses of the heap and PHP's own library.
+
+5/ CVE-2026-109619 turns that leaked knowledge into full code execution — forging an internal PHP structure whose "destructor" pointer is secretly set to system(). When PHP cleans up, it unknowingly runs your command instead.
+
+6/ End result: full remote code execution as www-data, from nothing but ordinary HTTP POST requests. The whole chain runs in under 10 seconds.
+
+7/ Big takeaway for blue teamers: patching your CMS/framework does NOTHING here. The fix has to happen at the PHP runtime level (8.4.27+, 8.5.12+, etc). Also — a PHP-module WAF can't catch this, because the exploit fires before your app (and the WAF hook) ever runs.
+
+8/ Wrote up the full beginner-friendly walkthrough (with my own mistakes included 😅) on GitHub: [link]
+
+#TryHackMe #CyberSecurity #BlueTeam #AppSec #PHP #InfoSec
