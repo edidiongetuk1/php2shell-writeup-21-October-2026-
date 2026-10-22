@@ -393,4 +393,4 @@ This was a genuinely eye-opening room — it's one thing to know in the abstract
 
 ---
 
-*Writeup by Eee — Blue Team cybersecurity trainee, Start Innovation Hub (Uyo), powered by Talentport.*
+*Writeup by Edidong Etuk
